@@ -1,19 +1,21 @@
 function testmyGSQR()
-    n = 1000;
-    m = 100;
-    A = randi(1000, [n,m]);
+    n = randi(10);
+    n = 10
+    m = n + randi(5);
+    m = 5
+    range = randi(50);
+    A = randn([n,m]) * range;
     
-    [Q,R] = myMGSQR(A);
+    [Q,R] = myGSQR(A);
     
     recomposed = Q*R;
-    tol = 1e-10;
-    is_proper_decompose = abs(recomposed - A) < tol;
+    is_proper_decompose = isequal(recomposed,A);
     if ~is_proper_decompose
         for i = 1:1:n
             for j = 1:1:m
-                entry_equal = abs(recomposed(i,j) - A(i,j)) < tol;
+                entry_equal = (Q*R)(i,j) == A(i,j);
                 if ~entry_equal
-                    fprintf("Entry at %d %d not equal: Q*R: %f A: %f\n", i,j,recomposed(i,j), A(i,j));
+                    fprintf("Entry at %d %d not equal: Q: %f A: %f", i,j,Q(i,j), A(i,j));
                 end
             end
         end
@@ -25,14 +27,14 @@ function testmyGSQR()
         assert(is_proper_decompose);
     end
 
-    is_orthonormal = abs(transpose(Q)*Q - eye(m)) < tol;
+    is_orthonormal = isequal(transpose(Q)*Q,eye([n,m]));
     if ~is_orthonormal
         disp("Q not orthonormal: ");
         disp(transpose(Q)*Q);
         assert(is_orthonormal);
     end
 
-    disp("myMGSQR Tests Passed!");
+    disp("Tests passed");
     
 
 end

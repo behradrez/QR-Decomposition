@@ -15,12 +15,16 @@ function [Q,R] = myHHSQR(A)
     % are more columns than rows, we'll iterate over rows.
     for col_idx = 1:1:m
         
-        H_curr = eye(size(H_combined)); % full reflection matrix shape
-        H_small = eye(n+1-col_idx); % small reflection sub-matrix
+ 
+        H_curr = eye(size(H_combined));
+        H_small = eye(n+1-col_idx);
 
-        % Get first column of sub-matrix
+        % Compute H matrix that turns first column of sub matrix into upper
+        % row echelon form
+        
+        % Get column of sub-matrix
         first_a_col = submatrix(:,1);
-        % Compute V = +/- norm(a)*[1 0 0...]
+        % Compute V = +/-
         v = eye(size(first_a_col)) * norm(first_a_col);
         
         if first_a_col(1) >=0
@@ -29,22 +33,22 @@ function [Q,R] = myHHSQR(A)
             v = v - first_a_col;
         end
         
-        % Compute the sub-matrix reflection
-        H_small = H_small - 2 * ((v * transpose(v)) / (transpose(v) * v));
         
-        % Fit sub-reflection matrix into original sized reflection matrix
+
+        % Compute the reflection
+        H_small = H_small - 2 * ((v * transpose(v)) / (transpose(v) * v));
+        submatrix = H_small * submatrix;
+        % Compute the result of reflection * submatrix, store so its
+        % submatrix can be used in next operation
+        % Store this Householder reflection into the combined sequence of
+        % reflection matrices
         H_curr(col_idx:end, col_idx:end) = H_small;
-        % Left multiply with previous reflection matrices, stores progress
         H_combined = H_curr * H_combined;
         
-        % Compute the result of reflection * submatrix. In next iterations, 
-        % need to get the sub-submatrix by removing first row & column.
-        submatrix = H_small * submatrix;
+        % For next iteration, consider a smaller submatrix
         submatrix = submatrix(2:end, 2:end);
     end
-
-    % Final R is all the reflections * original matrix A.
+    
     R = H_combined * A;
-    % Final Q is transpose == inverse of reflections 
     Q = transpose(H_combined);
 end

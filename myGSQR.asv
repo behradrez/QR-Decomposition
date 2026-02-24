@@ -1,0 +1,37 @@
+function [Q,R] = myGSQR(A)
+    % Get sizes and initialize matric
+    [n,m] = size(A);
+    Q = zeros(n,m);
+    R = zeros(m,m);
+    
+    for column = 1:1:m
+        % go column by column, solving for the diagonal entry
+        a_m = A(:,column);
+        
+        % row by row, figure out the r entries above the diagonal
+        sub = zeros(size(a_m));
+        for row = 1:1:column-1
+            prev_q = Q(:,row);
+            disp(prev_q);
+            r_row = transpose(prev_q) * A(:, column);
+            
+            R(row, column) = r_row;
+            
+            sub = sub + r_row*prev_q;
+            disp(sub);
+               
+        end
+
+        v = a_m - sub;
+        r_m = norm(v);
+        qm = v/r_m;
+        
+        R(column, column) = r_m;
+        Q(:, column) = qm;
+    end
+    
+    disp(Q);
+    disp(R);
+
+
+end
