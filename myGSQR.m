@@ -18,7 +18,7 @@ function [Q,R] = myGSQR(A)
         for row = 1:1:column-1
             % Get associated Q column and compute the r entry
             prev_q = Q(:,row);
-            r_row = transpose(prev_q) * A(:, column);
+            r_row = transpose(prev_q) * a_m;
 
             % Save computed r_entry
             R(row, column) = r_row;

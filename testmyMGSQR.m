@@ -1,12 +1,18 @@
-function testmyGSQR()
+function testmyMGSQR()
+    % Parameters
     n = 1000;
     m = 100;
+    rng(42);
+
+    % Make random A matrix and decompose it with function
     A = randi(1000, [n,m]);
-    
     [Q,R] = myMGSQR(A);
     
+    % Recompose with Q,R
     recomposed = Q*R;
-    tol = 1e-10;
+
+    % Test for recomposition correctness, by comparing error threshold
+    tol = 1e-15;
     is_proper_decompose = abs(recomposed - A) < tol;
     if ~is_proper_decompose
         for i = 1:1:n
@@ -25,6 +31,8 @@ function testmyGSQR()
         assert(is_proper_decompose);
     end
 
+    % Test for orthonormality of Q, if error against Identity above
+    % tolerance -> fail
     is_orthonormal = abs(transpose(Q)*Q - eye(m)) < tol;
     if ~is_orthonormal
         disp("Q not orthonormal: ");

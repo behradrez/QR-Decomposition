@@ -1,54 +1,36 @@
 function [Q,R] = myHHSQR(A)
-    
-    [n,m] = size(A);
+    [m,n] = size(A);
     % Stores all reflection matrices, sequentially left-multiplied.
-    H_combined = eye(n);
     
     % The starting matrix is simply A. In each iteration, we are going to
-    % left-multiply the submatrix by the computed reflection matrix, and
-    % then crop it by 1 row and 1 column. Therefore, we will store the
-    % starting matrix A in a separate variable "submatrix" and operate on
-    % that only.
-    submatrix = H_combined * A;
-    
-    % Need to compute a reflection matrix for every diagonal. Since there
-    % are more columns than rows, we'll iterate over rows.
-    for col_idx = 1:1:m
-        
- 
-        H_curr = eye(size(H_combined));
-        H_small = eye(n+1-col_idx);
+    % left-multiply the submatrix by the computed reflection matrix. Therefore,
+    % we will store the starting matrix A in a separate variable
+    % "R" and operate on that only.
+    R = A;
+    Q = eye(m);
 
-        % Compute H matrix that turns first column of sub matrix into upper
-        % row echelon form
-        
-        % Get column of sub-matrix
-        first_a_col = submatrix(:,1);
-        % Compute V = +/-
-        v = eye(size(first_a_col)) * norm(first_a_col);
-        
-        if first_a_col(1) >=0
-            v = v + first_a_col;
-        else
-            v = v - first_a_col;
-        end
-        
-        
 
-        % Compute the reflection
-        H_small = H_small - 2 * ((v * transpose(v)) / (transpose(v) * v));
-        submatrix = H_small * submatrix;
-        % Compute the result of reflection * submatrix, store so its
-        % submatrix can be used in next operation
-        % Store this Householder reflection into the combined sequence of
-        % reflection matrices
-        H_curr(col_idx:end, col_idx:end) = H_small;
-        H_combined = H_curr * H_combined;
+    % Need to compute a reflection matrix for every diagonal
+    for col_idx = 1:n
         
-        % For next iteration, consider a smaller submatrix
-        submatrix = submatrix(2:end, 2:end);
+        % Norm of the specific sub-column, starting at the diagonal's row. 
+        normx = norm(R(col_idx:end, col_idx));
+
+        % Pick sign that avoids catastrophic cancellation, therefore
+        % minimizing potential error 
+        s = -sign(R(col_idx,col_idx));
+        u1 = R(col_idx, col_idx) - s * normx;
+        
+        w = R(col_idx: end, col_idx) / u1;
+        w(1) = 1;
+        tau = -s * u1 / normx;
+        
+        % Apply the computed reflection directly to the submatrix of the
+        % overall R. 
+        R(col_idx:end,:) = R(col_idx:end,:) - (tau * w) * (w' * R(col_idx:end,:));
+        
+        % Similarly, accumulate the reflector into Q.
+        Q(:, col_idx:end) = Q(:,col_idx:end) - (Q(:, col_idx:end) * w) * (tau*w)';
+
     end
-    
-    R = H_combined * A;
-    Q = transpose(H_combined);
 end

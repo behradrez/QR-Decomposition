@@ -1,50 +1,40 @@
 function [Q,R] = myHHSQR(A)
-    
-    [n,m] = size(A);
+    [m,n] = size(A);
     % Stores all reflection matrices, sequentially left-multiplied.
-    H_combined = eye(n);
     
     % The starting matrix is simply A. In each iteration, we are going to
-    % left-multiply the submatrix by the computed reflection matrix, and
-    % then crop it by 1 row and 1 column. Therefore, we will store the
-    % starting matrix A in a separate variable "submatrix" and operate on
-    % that only.
-    submatrix = H_combined * A;
-    
-    % Need to compute a reflection matrix for every diagonal. Since there
-    % are more columns than rows, we'll iterate over rows.
-    for col_idx = 1:1:m
-        
-        H_curr = eye(size(H_combined)); % full reflection matrix shape
-        H_small = eye(n+1-col_idx); % small reflection sub-matrix
+    % left-multiply the submatrix by the computed reflection matrix. Therefore,
+    % we will store the starting matrix A in a separate variable
+    % "R" and operate on that only.
+    R = A;
+    Q = eye(m);
 
-        % Get first column of sub-matrix
-        first_a_col = submatrix(:,1);
-        % Compute V = +/- norm(a)*[1 0 0...]
-        v = eye(size(first_a_col)) * norm(first_a_col);
+
+    % Need to compute a reflection matrix for every diagonal
+    for col_idx = 1:n
         
-        if first_a_col(1) >=0
-            v = v + first_a_col;
-        else
-            v = v - first_a_col;
-        end
+        % Take the specific sub-column of current column, starting at the
+        % row of the loop index
+        x = R(col_idx:end, col_idx);
+
+        % Pick sign that avoids catastrophic cancellation, therefore
+        % minimizing potential error when subtracting
+        v = x;
+        v(1) = x(1) + sign(x(1)) * norm(x);
+
+        % Take the scale 2/(v_T * v) from lectures
+        scale = 2 / (v' * v);
         
-        % Compute the sub-matrix reflection
-        H_small = H_small - 2 * ((v * transpose(v)) / (transpose(v) * v));
+        % Apply the computed reflection directly to the submatrix of the
+        % overall R. 
+        R(col_idx:end,:) = R(col_idx:end,:) - (scale * v) * (v' * R(col_idx:end,:));
         
-        % Fit sub-reflection matrix into original sized reflection matrix
-        H_curr(col_idx:end, col_idx:end) = H_small;
-        % Left multiply with previous reflection matrices, stores progress
-        H_combined = H_curr * H_combined;
-        
-        % Compute the result of reflection * submatrix. In next iterations, 
-        % need to get the sub-submatrix by removing first row & column.
-        submatrix = H_small * submatrix;
-        submatrix = submatrix(2:end, 2:end);
+        % Similarly, accumulate the reflector into Q.
+        Q(:, col_idx:end) = Q(:,col_idx:end) - (Q(:, col_idx:end) * v) * (scale*v)';
+
     end
 
-    % Final R is all the reflections * original matrix A.
-    R = H_combined * A;
-    % Final Q is transpose == inverse of reflections 
-    Q = transpose(H_combined);
+    % Trim Q and R to economy form
+    %Q = Q(:, 1:n);
+    %R = R(1:n, :);
 end

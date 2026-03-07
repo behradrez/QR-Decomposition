@@ -1,12 +1,18 @@
 function testmyHHSQR()
-    n = 10;
-    m = 5;
+    % Parameters
+    n = 1000;
+    m = 100;
+    rng(42);
+
+    % Make random A matrix and decompose it with function
     A = randi(1000, [n,m]);
-    
     [Q,R] = myHHSQR(A);
     
+    % Recompose with Q,R
     recomposed = Q*R;
-    tol = 1e-10;
+    
+    % Test for recomposition correctness, by comparing error threshold
+    tol = 1e-15;    
     is_proper_decompose = abs(recomposed - A) < tol;
     if ~is_proper_decompose
         for i = 1:1:n
@@ -25,14 +31,19 @@ function testmyHHSQR()
         assert(is_proper_decompose);
     end
 
-    is_orthonormal = abs(transpose(Q)*Q - eye(n)) < tol;
+    % Test for orthonormality of Q, if error against Identity above
+    % tolerance -> fail
+    ortho = transpose(Q) * Q;
+    is_orthonormal = abs(ortho - eye(size(ortho))) < tol;
     if ~is_orthonormal
         disp("Q not orthonormal: ");
         disp(transpose(Q)*Q);
         assert(is_orthonormal);
     end
 
-    disp("myMGSQR Tests Passed!");
+    disp("myHHSQR Tests Passed!");
+    
+
     
 
 end
